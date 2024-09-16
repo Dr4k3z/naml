@@ -1,0 +1,13 @@
+name: naml
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.12
+  - numpy
+  - pandas
+  - matplotlib
+  - scipy
+  - seaborn
+  - scikit-learn
+  - pip
