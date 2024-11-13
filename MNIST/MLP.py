@@ -9,6 +9,7 @@ from functools import partial
 from ETL import ETL, NumpyDataLoader
 import time
 import pickle
+import matplotlib.pyplot as plt
 
 '''
 This code is highly inspired by the tutorial "Get Started with JAX" by Aleksa Gordić.
@@ -72,8 +73,8 @@ class MLP:
             labels : jnp.array, batch of labels
         """
         pred = self.batched_predict(imgs, params)
-        return -jnp.mean(labels*pred)    
-
+        return -jnp.mean(labels*pred)
+    
     @partial(jit, static_argnums=(0,))
     def _update(self, params : list, imgs : jnp.array, labels : jnp.array, lr : float) -> tuple:
         """
@@ -105,7 +106,7 @@ class MLP:
         """
             Getter function for MLP parameters, return in pytree format
         """
-        return tree_map(lambda x : x.shape, self.__params)
+        return self.__params
         
     def save_model(self, path):
         with open(path, 'wb') as f:
@@ -119,9 +120,11 @@ if __name__=="__main__":
     train_loader = NumpyDataLoader(X_train, y_train, batch_size, shuffle=True, drop_last=True)
 
     mlp = MLP([784,128,128,10])
-    
-    mlp.train(train_loader, epochs=10)
+
+    mlp.train(train_loader, epochs=20)
 
     print("Training error: ", mlp.loss_function(mlp.params, X_train, y_train))
-
+    plt.imshow(X_train[0].reshape(28,28), cmap='gray')
+    print("Prediction: ", jnp.argmax(mlp.batched_predict(X_train[0:1])))
+    plt.show()
     mlp.save_model("mlp_model.pkl")
