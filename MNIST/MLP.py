@@ -17,6 +17,8 @@ Refer to Gordić, Aleksa. "Get started with JAX." GitHub repository, 2021.
 Available at: https://github.com/gordicaleksa/get-started-with-JAX
 '''
 
+# TODO: Xavier initialization
+
 class MLP:
     """
         List of activation functions supported by this class.
@@ -27,12 +29,14 @@ class MLP:
         'relu': relu,
         'sigmoid': sigmoid,
         'softmax': softmax,
-        'log_softmax': log_softmax
+        'log_softmax': log_softmax,
+        'identity': lambda x: x
     }
 
     loss_fns = {
         'cross_entropy': lambda y_true, y_pred: -jnp.mean(y_true*y_pred), # is this the cross-entropy loss?
-        'mse': lambda y_true, y_pred: jnp.mean((y_true-y_pred)**2)
+        'mse': lambda y_true, y_pred: jnp.mean((y_true-y_pred)**2),
+        'log-likelihood' : lambda y_true,y_pred : -jnp.mean(jnp.sum(y_true * y_pred, axis=1))  # Cross-entropy loss
     }
 
     def __init__(self, layers : list, activations : list = None, loss : str = "cross_entropy", seed : int = 0):
@@ -44,13 +48,14 @@ class MLP:
         """
 
         self.__params = []
-        self.__activations = activations or ['relu'] * (len(layers) - 2) # if None, just use relu
+        self.__activations = activations or ['relu'] * (len(layers) - 1) # if None, just use relu
         self.__loss = loss
         self.__parent_key = random.PRNGKey(seed)
 
         keys = random.split(self.__parent_key, len(layers)-1)
-        scale = 0.1 # reduce the initial variance of weigths
         for n_in,n_out,key in zip(layers[:-1],layers[1:],keys):
+            scale = jnp.sqrt(2/n_in) # He initialization
+        
             self.__params.append({
                 'W': scale*random.normal(key, (n_in,n_out)),
                 'b': scale*jnp.zeros(n_out)
@@ -97,14 +102,19 @@ class MLP:
             params : list, containing the model parameters
         """
         hidden_layers = params[:-1]
+        hidden_activations = self.__activations[:-1]
+
+        assert len(hidden_layers) == len(hidden_activations), "Number of layers and activations must match"
+
         act = x
-        for layer,activation in zip(hidden_layers, self.__activations):
+        for layer,activation in zip(hidden_layers, hidden_activations):
             act = jnp.dot(act, layer['W']) + layer['b']
             act = self.__get_activation(activation)(act) # get's the actual func from the alias, and applies it
         
         w_last, b_last = params[-1]['W'], params[-1]['b']
         act = jnp.dot(act, w_last) + b_last
-        return act - logsumexp(act)
+        return act - logsumexp(act) # this last line creates trouble
+        #return self.__get_activation(self.__activations[-1])(act)
 
     def batched_predict(self, x : jnp.arange, params : list = None) -> jnp.array:
         """
@@ -199,10 +209,22 @@ if __name__=='__main__':
     batch_size = 128
     train_loader = DataLoader(X_train, y_train, batch_size, shuffle=True, drop_last=True)
  
-    mlp = MLP([784,128,128,10])
+    #mlp = MLP([784,128,128,10])
     
     #mlp.train(train_loader, epochs=10, lr=1e-3, show=True)
     #mlp.save_model('mlp.pkl')
-    mlp = MLP.load_model("mlp.pkl")
+    #mlp = MLP.load_model("mlp.pkl")
 
-    print(f'Loss: {mlp.loss_function(X_train[:128], y_train[:128], mlp.params)}')
+    #print(f'Loss: {mlp.loss_function(X_train[:128], y_train[:128], mlp.params)}')
+
+    mlp = MLP(
+        [784, 128, 128, 10],
+        activations = ['relu', 'relu', 'identity'],
+        loss = 'cross_entropy'
+    )
+    
+    mlp.train(train_loader, epochs=50, lr=1e-3, show=True)
+
+    Y = mlp.batched_predict(X_train[:10])
+    for i in range(10):
+        print(jnp.argmax(Y[i]), y_train[i])    

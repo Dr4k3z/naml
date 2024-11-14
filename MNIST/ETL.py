@@ -22,10 +22,10 @@ class ETL:
         X_test = X_test.reshape((X_test.shape[0],-1))
 
         if onehot:
-            label_train = self.onehot_encoding(y_train)
-            label_test = self.onehot_encoding(y_test)
+            y_train = self.onehot_encoding(y_train)
+            y_test = self.onehot_encoding(y_test)
 
-        return X_train, label_train, X_test, label_test
+        return X_train, y_train, X_test, y_test
 
     @staticmethod        
     def readImg(name):
