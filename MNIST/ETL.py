@@ -5,39 +5,35 @@ class ETL:
     def __init__(self,path):
         self.__path = "./"+path
 
-    def loadData(self,reduce=True):
+    @staticmethod
+    def onehot_encoding(y):
+        num_class = max(y)+1 # number of different classes (assuming the go from zero)
+        labels = np.zeros((y.shape[0],num_class))
+        labels[np.arange(y.shape[0]),y] = 1
+        return labels
+
+    def loadData(self, onehot=True):
         with np.load(self.__path) as f:
             X_train, y_train = f['x_train'], f['y_train']
             X_test, y_test = f['x_test'], f['y_test']
 
-            # For performance, training and testing set size is reduced
-            if reduce:
-                max_row_training = 5000
-                max_row_testing = 10000
-                X_train = X_train[:max_row_training] #reduce sample for performance
-                y_train = y_train[:max_row_training]
-                X_test = X_test[:max_row_testing]
-                y_test = y_test[:max_row_testing] #recude sample for performance
-            
-            # Flatten the images (28x28) to 1D (784)
-            X_train = X_train.reshape((X_train.shape[0], -1))
-            X_test = X_test.reshape((X_test.shape[0],-1))
+        # Flatten the images (28x28) to 1D (784)
+        X_train = X_train.reshape((X_train.shape[0], -1))
+        X_test = X_test.reshape((X_test.shape[0],-1))
 
-            label_train = np.zeros((y_train.shape[0],10))
-            label_train[np.arange(y_train.shape[0]),y_train] = 1
+        if onehot:
+            label_train = self.onehot_encoding(y_train)
+            label_test = self.onehot_encoding(y_test)
 
-            label_test = np.zeros((y_test.shape[0],10))
-            label_test[np.arange(y_test.shape[0]),y_test] = 1
-
-            return X_train, label_train, X_test, label_test
+        return X_train, label_train, X_test, label_test
 
     @staticmethod        
     def readImg(name):
         img = Image.open(name).convert("L")
         return np.array(img).flatten().reshape(1,-1)
 
-# thx chatgpt
-class NumpyDataLoader:
+# Custom DataLoader class
+class DataLoader:
     def __init__(self, features, labels, batch_size, shuffle=True, drop_last=False):
         assert len(features) == len(labels), "Features and labels must have the same length"
         self.features = features
@@ -81,7 +77,7 @@ if __name__ == "__main__":
     X_train,y_train,X_test,y_test = etl.loadData()
 
     batch_size = 128
-    train_loader = NumpyDataLoader(X_train, y_train, batch_size, shuffle=True, drop_last=True)
+    train_loader = DataLoader(X_train, y_train, batch_size, shuffle=True, drop_last=True)
 
     for i,(img,lbl) in enumerate(train_loader):
         print(i,img.shape,lbl.shape)
