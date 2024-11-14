@@ -3,7 +3,7 @@ import jax.numpy as jnp
 from jax import grad, jit, vmap, value_and_grad
 from jax import random
 from jax.tree_util import tree_map
-from jax.nn import relu, softmax, sigmoid, log_softmax
+from jax.nn import relu, softmax, sigmoid, log_softmax, tanh
 from jax.scipy.special import logsumexp
 from functools import partial
 from ETL import ETL, DataLoader
@@ -30,7 +30,8 @@ class MLP:
         'sigmoid': sigmoid,
         'softmax': softmax,
         'log_softmax': log_softmax,
-        'identity': lambda x: x
+        'linear': lambda x: x,
+        'tanh' : tanh
     }
 
     loss_fns = {
@@ -113,8 +114,8 @@ class MLP:
         
         w_last, b_last = params[-1]['W'], params[-1]['b']
         act = jnp.dot(act, w_last) + b_last
-        return act - logsumexp(act) # this last line creates trouble
-        #return self.__get_activation(self.__activations[-1])(act)
+        #return act - logsumexp(act) # this last line creates trouble
+        return self.__get_activation(self.__activations[-1])(act)
 
     def batched_predict(self, x : jnp.arange, params : list = None) -> jnp.array:
         """
@@ -151,19 +152,30 @@ class MLP:
         loss,grads = value_and_grad(self.loss_function, argnums=2)(imgs, labels, params)
         return loss, tree_map(lambda p,g: p - lr*g, params, grads)
     
-    def train(self, train_loader : DataLoader, epochs : int = 100, lr : float = 1e-3, show : bool = True) -> None:
+    def train(self, train_loader : DataLoader, testing_loader : DataLoader, epochs : int = 100, lr : float = 1e-3, show : bool = True) -> None:
         """
-            Training method. Could I jit this?
+            Training method. Could I jit this? This function trains the parameters
+            of the MLP. It returns the training and testing loss for each epoch.
             train_loader : DataLoader, custom loader object
+            testing_loader : DataLoader, custom loader object
             epochs : int, number of epochs
             lr : float, learning rate
         """
         self.__lr = lr # save learning rate for later use
+
+        training_loss = [0]*epochs
+        testing_loss = [0]*epochs
+
         for epoch in range(epochs):
             for cnt,(imgs,labels) in enumerate(train_loader):
                 loss, self.__params = self.__update(self.__params, imgs, labels, lr)
                 if show and cnt % 100 == 0:
                     print(f'Epoch {epoch}, batch {cnt}, loss {loss}')
+
+            training_loss[epoch] = loss
+            testing_loss[epoch],_ = self.__update(self.__params, *testing_loader.dataset, lr) # flexing python
+        
+        return training_loss,testing_loss
 
     def save_model(self, path : str) -> None:
         """

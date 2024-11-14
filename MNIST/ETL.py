@@ -69,6 +69,10 @@ class DataLoader:
         if self.drop_last:
             return len(self.features) // self.batch_size
         return (len(self.features) + self.batch_size - 1) // self.batch_size
+    
+    @property
+    def dataset(self):
+        return self.features, self.labels
 
 import matplotlib.pyplot as plt    
 
