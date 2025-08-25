@@ -6,6 +6,10 @@ __pycache__/
 # C extensions
 *.so
 
+
+# videos from Lab1
+Video_*
+
 # Distribution / packaging
 .Python
 build/

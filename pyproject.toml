@@ -1,0 +1,29 @@
+[project]
+name = "numerical_analysis_for_ml"
+version = "0.1.0"
+requires-python = ">=3.8"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+lint.extend-select = ["E", "F", "I", "UP", "B"]  # pyflakes, pycodestyle, isort, upgrades, bugbear
+lint.ignore = ["E501"]  # don't complain about line length
+lint.fixable = ["ALL"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.ruff.lint.isort]
+known-first-party = ["your_package_name"]  # optional
+
+[tool.mypy]
+strict = true
+ignore_missing_imports = true
+disallow_untyped_defs = true
+disallow_any_unimported = true
+no_implicit_optional = true
+warn_unused_ignores = true
+warn_return_any = true
+warn_redundant_casts = true
+warn_unused_configs = true
+check_untyped_defs = true
