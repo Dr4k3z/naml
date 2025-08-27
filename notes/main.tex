@@ -1,0 +1,128 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{systeme}
+\usepackage{amssymb}
+\usepackage{blindtext}
+\usepackage{graphicx}
+\usepackage{commath}
+\usepackage{multicol}
+\usepackage[inline]{enumitem}   
+\usepackage[absolute,overlay]{textpos}
+\usepackage[margin=0.65in]{geometry}
+\numberwithin{equation}{subsection}
+\usepackage{physics}
+\usepackage{mathtools}
+\usepackage{blindtext}
+\usepackage{accents}
+%\usepackage{tikz-cd}
+\usepackage[arrow]{xy}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage[hidelinks]{hyperref}
+
+\input{style}
+
+\title{Stochastic Differential Equations}                    
+\author{Matteo Campagnoli}
+\date{Academic Year 2024--2025}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\newpage
+
+\section{Newton’s Method}
+Consider a continuous, twice differentiable function $f : I \subseteq \mathbb{R} \to \mathbb{R}$ that attains a minimum at the point $x^*$. Our goal is to construct an iterative algorithm that converges to this minimum by exploiting information from the first and second derivatives of $f$. This procedure is known as \emph{Newton’s method} for function minimization.  
+
+Given an initial guess $x_0$, we generate a sequence $\{x_k\}$ according to an update rule. To derive it, consider the perturbed point $x_k + \delta$, where $\delta$ is small. Expanding $f$ around $x_k$ using a second-order Taylor series yields
+\begin{gather*}
+    f(x_k + \delta) \approx f(x_k) + f'(x_k)\delta + \tfrac{1}{2} f''(x_k)\delta^2, \\
+    \frac{\partial f(x_k+\delta)}{\partial \delta} \approx f'(x_k) + f''(x_k)\delta.
+\end{gather*}
+
+Here, $\delta$ can be interpreted as the step towards the minimum. To find the optimal $\delta$, we set the derivative with respect to $\delta$ equal to zero, obtaining the update rule
+\begin{gather}
+    f'(x_k) + f''(x_k)\delta = 0 
+    \;\;\implies\;\; 
+    \delta = -\frac{f'(x_k)}{f''(x_k)}, \notag \\
+    x_{k+1} = x_k - \frac{f'(x_k)}{f''(x_k)}.
+\end{gather}
+
+How can this idea be generalized to higher dimensions, such as when minimizing the cost function of a neural network? Let $J : A \subseteq \mathbb{R}^d \to \mathbb{R}$ be a twice continuously differentiable function, and let $\mathbf{x}_0$ denote the initial guess for its minimum. At each step $\mathbf{x}_k$, we approximate $J$ locally by a quadratic function:
+\begin{equation*}
+    J^{(k)}(\mathbf{x}) = J(\mathbf{x}_k) 
+    + \nabla J(\mathbf{x}_k)^T (\mathbf{x} - \mathbf{x}_k) 
+    + \tfrac{1}{2} (\mathbf{x} - \mathbf{x}_k)^T H(\mathbf{x}_k)(\mathbf{x} - \mathbf{x}_k),
+\end{equation*}
+where $H$ is the Hessian matrix. Differentiating with respect to $\mathbf{x}$ and setting the gradient equal to zero gives
+\begin{gather}
+    \nabla J^{(k)}(\mathbf{x}) 
+    = \nabla J(\mathbf{x}_k) + H(\mathbf{x}_k)(\mathbf{x} - \mathbf{x}_k) = 0 \notag \;\; \implies\;\; \mathbf{x} = \mathbf{x}_k - H^{-1}(\mathbf{x}_k)\nabla J(\mathbf{x}_k), \\
+    \mathbf{x}_{k+1} = \mathbf{x}_k - \gamma H^{-1}(\mathbf{x}_k)\nabla J(\mathbf{x}_k). \notag
+\end{gather}
+
+In the final expression, we include a scalar $\gamma$ that plays the role of a learning rate, similar to gradient descent methods. Directly inverting the Hessian is numerically unstable. In practice, it is preferable to solve the equivalent linear system
+\[
+    H(\mathbf{x}_k)\boldsymbol{\delta} = \nabla J(\mathbf{x}_k).
+\]
+However, solving such a system requires $\mathcal{O}(n^3)$ operations (slightly less with advanced algorithms). This cost makes Newton’s method impractical for deep learning, where the Hessian can be extremely large. To address this limitation, a family of \emph{Quasi-Newton methods} has been developed. These methods avoid computing the exact Hessian (or its inverse) and instead construct efficient approximations that retain much of the method’s convergence power while remaining computationally feasible. Like in the gradient descent case, the learning rate parameter is often adapted and computed at each step $\gamma_k$. In this context, the choice of $\gamma_k$ must satisfy two constraints, called \textit{Wolfe Conditions}, that ensure the overall progress and balance of the method. Let $\textbf{p}_k = H^{-1}(\textbf{x}_k)\nabla J(\textbf{x}_k)$:
+
+\begin{gather*}
+    J(\textbf{x}_k + \gamma_k \textbf{p}_k) \leq J(\textbf{x}_k) + c_1 \gamma_k \textbf{p}_k^T \nabla J(\textbf{x}_k) \\
+    -\textbf{p}_k^T \nabla J(\textbf{x}_k+\gamma_k \textbf{p}_k) \leq -c_2 \textbf{p}_k^T \nabla J(\textbf{x}_k)
+\end{gather*}
+
+Going back to the one-dimensional case, we wish to find a suitable approximation for the second derivative, which could make the overall method faster. We denote this approximation $\Tilde{f}^{(k)}$:
+
+\begin{equation*}
+    \Tilde{f}^{(k+1)}(x) = c^{(k+1)} + g^{(k+1)}(x - x_{k+1}) + \frac{1}{2} \Tilde{f}^{''}(x_{k+1}) (x-x_{k+1})^2 
+\end{equation*}
+
+where $c^{(k+1)}$ and $g^{(k+1)}$ are two parameters to be determined. This approximation shall satisfy two conditions: the first derivative of the approximated function, evaluated at $x_k$ and $x_{k+1}$, must be equal to the true values $f'(x_k)$ and $f'(x_{k+1})$, respectively. The latter implies that
+
+\begin{gather*}
+    \frac{d}{dx}\Tilde{f}^{(k+1)} \Big\vert_{x_{k+1}} = g^{(k+1)} + \Tilde{f}''(x_{k+1}) ( x_{k+1} - x_{k+1}) = f'(x_{k+1})
+\end{gather*}
+
+thus we find that $g^{(k+1)}$ is actually the first derivative at $x_{k+1}$. The former constraint, instead, requires that
+
+\begin{gather*}
+    f'(x_{k+1}) + \Tilde{f}''(x_{k+1}) (x_k - x_{k+1}) = f'(x_k) \\
+    \Tilde{f}''(x_{k+1}) = \frac{f'(x_{k+1}) - f'(x_k)}{x_{k+1}-x_k} \;\;\;\; \text{Secant Condition}
+\end{gather*}
+
+The approximation of the second derivative is analogous to the secant method. Indeed, even in the context of root-finding algorithms, the secant version is related to the classical Newton method. This leaves us with the following update rule:
+
+\begin{equation}
+    x_{k+1} = x_k - \frac{x_{k+1}-x_k}{f'(x_{k+1}) - f'(x_k)} f'(x_k)
+\end{equation}
+
+We can now generalize the procedure to the multi-dimensional case, seeking an equivalent approximation of the Hessian. Again, let $c^{(k+1)}$ and $\textbf{g}^{(k+1)}$ be some parameters to be determined, and write the approximated form of the function $J(\textbf{x})$ as 
+
+\begin{gather*}
+    \Tilde{J}^{(k+1)}(\textbf{x}) = c^{(k+1)} + \textbf{g}^{(k+1)}\cdot (\textbf{x} - \textbf{x}_{k+1}) + \frac{1}{2} (\textbf{x} - \textbf{x}_{k+1})^T \Tilde{H}^{(k+1)} (\textbf{x} - \textbf{x}_{k+1})
+\end{gather*}
+
+\begin{equation*}
+\begin{split}
+    &\text{Condition One:} \;\;\; \nabla \Tilde{J}^{(k+1)}(\textbf{x}_{k+1}) = \nabla J(\textbf{x}_{k+1}) \\
+    &\text{Condition Two:} \;\;\; \nabla \Tilde{J}^{(k+1)}(\textbf{x}_{k}) = \nabla J(\textbf{x}_{k})
+\end{split}
+\end{equation*}
+
+Again, we find that $\textbf{g}^{(k+1)} = \nabla J(\textbf{x}_{k+1})$ from the first condition, while the second leads to
+
+\begin{equation*}
+    \nabla J(\textbf{x}_{k+1}) + \Tilde{H}^{(k+1)} (\textbf{x}_{k} - \textbf{x}_{k+1}) = \nabla J(\textbf{x}_k) 
+    \;\; \implies \;\; 
+    \Tilde{H}^{(k+1)}(\textbf{x}_{k+1} - \textbf{x}_k) = \nabla J(\textbf{x}_{k+1}) - \nabla J(\textbf{x}_k).
+\end{equation*}
+
+Even in the multi-dimensional case, we obtain a similar secant condition. However, there is a fundamental difference: in the one-dimensional case, the approximation of the second derivative can be computed directly, since it is just a single value. On the other hand, the Hessian is a symmetric matrix, fully characterized by $n(n+1)/2$ distinct entries. In the secant condition, we only specify $n$ relations, leaving $n(n-1)/2$ parameters undetermined. To implement the method, we'll need some additional constraint. In the current literature on Quasi-Newton methods, the increment of the gradient is usually denoted $\textbf{y}^{(k)} = \nabla J(\textbf{x}_{k+1}) - \nabla J(\textbf{x}_k)$, while the update in the points is $\textbf{s}_k = (\textbf{x}_{k+1} - \textbf{x}_k)$. 
+
+
+\end{document}
