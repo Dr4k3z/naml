@@ -24,7 +24,7 @@
 
 \input{style}
 
-\title{Stochastic Differential Equations}                    
+\title{Numerical Analysis for Machine Learning}                    
 \author{Matteo Campagnoli}
 \date{Academic Year 2024--2025}
 
@@ -34,6 +34,51 @@
 \tableofcontents
 
 \newpage
+
+\section{Kernel methods}
+As long as we limit ourselves with linear models, separation boundaries will also be linear. A first solution to overcome this limit, without losing mos of the perks of linear models is to enrich the feature space to include also non-linear features.
+
+\begin{equation*}
+    \phi : \mathbb{R}^p \to \mathbb{R}^d \;\;\;\;\;\; \phi([x_1,x_2]) = \begin{bmatrix}
+    x_1 \\
+    x_2 \\
+    x_1^2 \\
+    x_2^2 \\
+    x_1 x_2
+    \end{bmatrix}
+\end{equation*}
+
+We map the initial features to a higher dimensional space. Given a collection of samples $\{\textbf{x}_1,\textbf{x}_2,...,\textbf{x}_N\}$ we build the enriched feature matrix $\Phi = [\phi(\textbf{x}_i)] \in \mathbb{R}^{n \times d}$. The regression model we wish to estimate will then be $\hat{\textbf{y}} = \Phi \hat{\textbf{w}}$. 
+
+This model can still be fit with normal equations, which is the true advantage of this technique, even with some Ridge regularization. Recall that using SVD, we can rewrite the normal equation for the regression weights as
+
+\begin{gather*}
+    \textbf{w}_R = (X^TX+\lambda I)^{-1}X^T \textbf{y} = (V \Sigma^T \Sigma V^T + \lambda I)^{-1} V \Sigma^T U^T \textbf{y} = \\
+    = V \Sigma^T (\Sigma^T \Sigma + \lambda I)^{-1} U^T \textbf{y} = V \Sigma^T U^T U (\Sigma^T \Sigma + \lambda I)^{-1} U^T \textbf{y} = X \boldsymbol{\beta}
+\end{gather*}
+
+where we've introduced a new symbol $\boldsymbol{\beta}$. In the context of enriched features, everything still holds simply replacing $X$ with the enriched features matrix $\Phi$. Moreover, we can write a more convenient form for the new parameter $\boldsymbol{\beta}$
+
+\begin{gather*}
+    \boldsymbol{\beta} = U(\Sigma^T \Sigma + \lambda I)^{-1} U^T \textbf{y} = \big[ U (\Sigma \Sigma^T + \lambda I)^{-1} U^T\big]^{-1} \textbf{y} = \\
+    = \big[ U \Sigma V V^T \Sigma^T + U \lambda I U^T\big]^{-1} \textbf{y} = (\Phi \Phi^T + \lambda I)^{-1} \textbf{y}
+\end{gather*}
+
+Due to the higher dimension of $\Phi$, the computation of this quantity is often impractical and computationally expensive. To solve this issue, we can introduce \textit{kernel functions} $K(\cdot,\cdot) : \textbf{x}_i,\textbf{x}_j \to \phi(\textbf{x}_i)\phi(\textbf{x}_j)$. Kernel functions are designed to mimic the action of the dot product of a specific enriched feature map for itself, but are able to do so much faster. Clearly, every feature map should have its own kernel function, which also depends the dimensions of the arrival space. However, in practice one usually does the opposite: instead of specifying the feature map and deriving a proper kernel function, we choose a known kernel (some examples are given below) and build the matrix $\Phi$, without worrying about the feature map we are implicitly using. For instance, polynomial kernel functions of degree $q$ map onto a feature space of dimension $p$:
+
+\begin{equation*}
+    K(\textbf{x}_i,\textbf{x}_j) = (\textbf{x}_i^T \textbf{x}_j)^q \;\;\;\; K(\textbf{x}_i,\textbf{x}_j) = (1+\textbf{x}_i^T \textbf{x}_j)^q
+\end{equation*}
+
+Another common kernel function is the \textit{Gaussian Kernel}, which actually corresponds to no feature map at all, as it'd be mapping the original features onto a space with infinite dimension
+
+\begin{equation*}
+    K(\textbf{x}_i, \textbf{x}_j) = \exp\Bigg\{ - \frac{\Vert \textbf{x}_i - \textbf{x}_j \Vert}{2 \sigma^2} \Bigg\}
+\end{equation*}
+
+\section{Backpropagation}
+
+\section{Gradient Descent Method}
 
 \section{Newton’s Method}
 Consider a continuous, twice differentiable function $f : I \subseteq \mathbb{R} \to \mathbb{R}$ that attains a minimum at the point $x^*$. Our goal is to construct an iterative algorithm that converges to this minimum by exploiting information from the first and second derivatives of $f$. This procedure is known as \emph{Newton’s method} for function minimization.  
@@ -123,6 +168,183 @@ Again, we find that $\textbf{g}^{(k+1)} = \nabla J(\textbf{x}_{k+1})$ from the f
 \end{equation*}
 
 Even in the multi-dimensional case, we obtain a similar secant condition. However, there is a fundamental difference: in the one-dimensional case, the approximation of the second derivative can be computed directly, since it is just a single value. On the other hand, the Hessian is a symmetric matrix, fully characterized by $n(n+1)/2$ distinct entries. In the secant condition, we only specify $n$ relations, leaving $n(n-1)/2$ parameters undetermined. To implement the method, we'll need some additional constraint. In the current literature on Quasi-Newton methods, the increment of the gradient is usually denoted $\textbf{y}^{(k)} = \nabla J(\textbf{x}_{k+1}) - \nabla J(\textbf{x}_k)$, while the update in the points is $\textbf{s}_k = (\textbf{x}_{k+1} - \textbf{x}_k)$. 
+
+One of the most famous approximation techniques is the Broyden–Fletcher–Goldfarb–Shanno (BFGS) method. First, recall that the Hessian must be symmetric and positive definite. Second, we want the successive iterations to remain stable in some sense, meaning $\Tilde{H}^{(k+1)}$ should stay \textit{"close"} to the previous $\Tilde{H}^{(k)}$, with respect to some matrix norm. In the BFGS setting, the chosen norm is the Frobenius norm. Hence, the problem of finding the approximated form of the Hessian becomes
+
+\begin{align}
+    \min_{\Tilde{H}^{(k+1)}} \;& \Vert \Tilde{H}^{(k+1)} - \Tilde{H}^{(k)} \Vert_F \\
+    \text{s.t.} \;& \Big( \Tilde{H}^{(k+1)} \Big)^T = \Tilde{H}^{(k+1)} \notag \\
+                 & \Tilde{H}^{(k+1)} \mathbf{s}_k = \mathbf{y}_k \notag
+\end{align}
+
+The positive definiteness of $\Tilde{H}^{(k+1)}$ depends on the sign of $\textbf{s}_k^T \textbf{y}_k$, which is guaranteed to be strictly positive by the Wolfe conditions, provided that the initial matrix $\Tilde{H}^{(0)}$ is symmetric and positive definite. Note that this problem formulation concerns the Hessian, while in practice we are more interested in its inverse. BFGS proposes a rank-two update
+
+\begin{equation*}
+    \Tilde{H}^{(k+1)} = \Tilde{H}^{(k)} + a \textbf{u}\textbf{u}^T + b \textbf{v} \textbf{v}^T
+\end{equation*}
+
+where $\textbf{u},\textbf{v}$ are linearly independent vectors and $a,b \in \mathbb{R}$. It has been shown that the optimal choices for these two vectors are $\textbf{u} = \textbf{y}_k$ and $\textbf{v} = \Tilde{H}^{(k)} \textbf{s}_k$. To determine the values of $a$ and $b$, we substitute this expression into the constraints:
+
+\begin{gather*}
+    \Big(\Tilde{H}^{(k)} + a \textbf{u}\textbf{u}^T + b \textbf{v}\Big) \textbf{s}_k = \textbf{y}_k \;\; \implies \;\; a = \frac{1}{\textbf{y}_k^T \textbf{s}_k } \;\;\;\; b = -\frac{1}{\textbf{s}_k^T \Tilde{H}^k \textbf{s}_k} \\
+    \Tilde{H}^{(k+1)} = \Tilde{H}^{(k)} + \frac{\textbf{y}_k \textbf{y}_k^T}{\textbf{y}_k^T \textbf{s}_k} - \frac{\Tilde{H}^{(k)}\textbf{s}_k \textbf{s}_k^T \Big(\Tilde{H}^{(k+1)}\Big)^T}{\textbf{s}_k^T \Tilde{H}^{(k)}\textbf{s}_k}
+\end{gather*}
+
+The Hessian update is essentially a combination of two terms: one depending on the previous step $\textbf{s}_k$, and one depending on the previous gradient. To invert this expression, we apply the Sherman–Morrison formula:
+
+\begin{equation}
+    \Big(\Tilde{H}^{(k+1)}\Big)^{-1} = \Big( I - \frac{\textbf{s}_k\textbf{y}_k^T}{\textbf{y}_k^T\textbf{s}_k} \Big) \Tilde{H}^{(k+1)} \Big( I - \frac{\textbf{y}_k \textbf{s}_k^T}{\textbf{s}_k^T \textbf{y}_k} \Big) + \frac{\textbf{s}_k \textbf{s}_k^T}{\textbf{y}_k^T \textbf{s}_k}
+\end{equation}
+
+Taking a generic vector $\textbf{z}$, we can verify that this matrix is indeed positive definite:
+
+\begin{gather*}
+    \textbf{z}^T \Tilde{H}^{(k+1)} \textbf{z} = \textbf{z}^T \Bigg( \Big( I - \frac{\textbf{s}_k\textbf{y}_k^T}{\textbf{y}_k^T\textbf{s}_k} \Big) \Tilde{H}^{(k+1)} \Big( I - \frac{\textbf{y}_k \textbf{s}_k^T}{\textbf{s}_k^T \textbf{y}_k} \Big) + \frac{\textbf{s}_k \textbf{s}_k^T}{\textbf{y}_k^T \textbf{s}_k} \Bigg) \textbf{z} = \\
+    = \Big( \textbf{z} - \frac{\textbf{s}_k\textbf{z}^T}{\textbf{y}_k^T\textbf{s}_k} \textbf{y}_k \Big) \Tilde{H}^{(k)} \Big( \textbf{z} - \frac{\textbf{s}_k \textbf{z}}{\textbf{s}_k^T \textbf{y}_k} \textbf{y}_k \Big) + \frac{(\textbf{s}_k^T \textbf{z})^2}{\textbf{y}^T \textbf{s}}
+\end{gather*}
+
+The second term is positive, as argued before. The first term is precisely the definition of positive definiteness for the matrix $\Tilde{H}^{(k)}$. Hence, proceeding backwards iteratively, if the initial matrix $\Tilde{H}^{(0)}$ is positive definite, then all subsequent updates will also be positive definite.
+A convenient choice is $\Tilde{H}^{(0)} = I$.
+
+\section{Universal Approximation Theorem}
+Neural networks are universal approximators in the sense that, under certain assumptions, any continuous function can be approximated to arbitrary precision by a neural network. However, we have no indication of what such a network might look like. Indeed, the theorems we prove below consider potentially infinitely deep networks, which are clearly very far from any practical consideration.
+
+Given $n \in \mathbb{N}$, we say a function $f : I_n = [0,1]^n \to \mathbb{R}$ is \textit{n-discriminatory} if the only signed Borel measure $\mu$ on $\mathcal{B}(I_n)$ such that
+\begin{equation*}
+    \int_{I_n} f(xy+\theta) \de \mu(x) = 0 \;\;\;\;\; \forall y \in \mathbb{R}^n \;\; \theta \in \mathbb{R}
+\end{equation*}
+is the zero measure. Moreover, if a function is $n-$discriminatory for every $n$, then we simply call it discriminatory.
+
+To prove an approximation result, we need some results from functional analysis. In particular, we recall that any bounded linear functional can be represented as an integral. Among the many representation theorems, we focus on one that deals with functionals on $\mathcal{C}^0(K)$, where $K \subset \mathbb{R}^n$ is a compact set.
+
+\begin{theorem}[Representation]
+    Let $F$ be a bounded linear functional on $\mathcal{C}^0(K)$. Then, there exists a unique Borel measure $\mu$ such that 
+    \begin{equation*}
+        F(f) = \int_K f(x) \de \mu(x) \;\;\;\;\; \forall f \in \mathcal{C}^0(K)
+    \end{equation*}
+\end{theorem}
+
+The proof of the approximation theorem will proceed as follows: we first build a space $U$, which spans all outputs of a neural network, and then show that $U$ is dense in the space of continuous functions. As will be evident later, since $U$ is a subspace of $\mathcal{C}^{0}(I_n)$, we will make extensive use of the Hahn–Banach theorem to extend linear functionals from a subspace to its closure.
+
+\begin{theorem}[Hahn–Banach]
+    Let $X$ be a vector space, $X_0$ a proper subspace, and $p(x)$ a convex functional on $X$. Given a linear functional $\ell : X_0 \to \mathbb{R}$, there exists a linear functional $L : X \to \mathbb{R}$ such that
+    \begin{gather*}
+        L(x) = \ell(x) \;\;\;\;\; \forall x \in X_0 \\
+        L(x) \leq p(x) \;\;\;\;\; \forall x \in X
+    \end{gather*}
+\end{theorem}
+
+Two immediate consequences of the Hahn–Banach theorem are the following corollaries.
+
+\begin{corollary}
+Let $U$ be a linear subspace of $X$. Suppose there exists $x_0 \in X$ such that $\Vert u - x_0 \Vert \geq \delta$ for every $u \in U$. Then, there exists a nonzero linear functional $L$ on $X$ such that $\Vert L \Vert \leq 1$, $L(x_0) = \delta$, and $L(u) = 0$ for every $u \in U$.
+\end{corollary}
+
+\begin{corollary}
+    Let $U$ be a non-dense subspace of $X$. Then, there exists a bounded linear functional $L$ on $X$ such that $L \neq \textbf{0}$ and $L(u) = 0$ for all $u \in U$.
+\end{corollary}
+
+We are almost ready to state the approximation theorem. The last piece we need is a more specific result about $\mathcal{C}^0(I_n)$, which follows directly from the corollaries above.
+
+\begin{lemma}
+    Let $U$ be a non-dense subspace of $\mathcal{C}^0(I_n)$. Then there exists a unique measure $\mu$ such that
+    \begin{equation*}
+        \int_{I_n} h(x) \de \mu(x) = 0 \;\;\;\;\; \forall h \in U
+    \end{equation*}
+\end{lemma}
+\begin{proof}
+    Apply the second corollary to $X = \mathcal{C}^0(I_n)$ and consider the functional $L : \mathcal{C}^0(I_n) \to \mathbb{R}$ such that $L_{\vert U} = 0$. Applying the representation theorem of bounded functionals on $\mathcal{C}^0(K)$ mentioned above (noting that $I_n$ is compact), we know there exists a measure such that
+    \begin{gather*}
+        L(f) = \int_{I_n} f(x) \de \mu(x) \;\;\;\;\; \forall f \in \mathcal{C}^0(I_n) \\
+        \implies L(f) = \int_{I_n} f(x) \de \mu(x) = 0 \;\;\;\;\; \forall f \in U
+    \end{gather*}
+\end{proof}
+
+\begin{theorem}[Universal Approximation]
+    Let $\sigma$ be any continuous discriminatory function. Then the set of finite sums of the form
+    \begin{equation*}
+        G(\textbf{x}) = \sum_{j=1}^N \alpha_j \sigma(\textbf{w}_j^T \textbf{x} + \theta_j) \;\;\;\;\; \textbf{w}_j \in \mathbb{R}^n \;\; \alpha_j, \theta_j \in \mathbb{R}
+    \end{equation*}
+    is dense in $\mathcal{C}^0(I_n)$.
+\end{theorem}
+\begin{proof}
+    Since $\sigma$ is continuous and finite sums of continuous functions are continuous, we have 
+    \begin{equation*}
+        U = \Big\{ G(\textbf{x}) = \sum_{j=1}^N \alpha_j \sigma(\textbf{w}_j^T \textbf{x} + \theta_j) \Big\} \subseteq \mathcal{C}^0(I_n)
+    \end{equation*}
+
+    We now proceed by contradiction. Suppose $U$ is not dense in $\mathcal{C}^0(I_n)$ and let $R$ denote its closure. Thus, $R$ is a \textit{proper} subset of $\mathcal{C}^0(I_n)$. By the Hahn–Banach theorem, there exists a bounded linear functional on $\mathcal{C}^0(I_n)$ with the property that $L_{\vert U} = L_{\vert R} = 0$. Since $I_n$ is compact, this functional also has a representation in terms of integrals for a nonzero measure
+    \begin{equation*}
+        L(h) = \int_{I_n} h(\textbf{x}) \de \mu(\textbf{x}) \;\;\;\;\; \forall h \in \mathcal{C}^0(I_n)
+    \end{equation*}
+
+    In particular, the integral is zero for $h \in U$. Taking a finite sum with a single summand and setting the coefficient $\alpha_1 = 1$, it is evident that the function $\sigma(\textbf{w}^T \textbf{x} + \theta)$ also belongs to $U$. Therefore
+    \begin{equation*}
+        \int_{I_n} \sigma(\textbf{w}^T \textbf{x} + \theta) \de \mu(\textbf{x}) = 0
+    \end{equation*}
+
+    By hypothesis, $\sigma$ is a discriminatory function, hence the only possible measure for which the relation above holds is $\mu \equiv 0$. But this contradicts the representation theorem. Thus, $U$ must be dense in $\mathcal{C}^0(I_n)$.
+\end{proof}
+
+Are the activation functions commonly used by neural networks actually discriminatory? If so, we have proved that any continuous function on $I_n$ can be approximated to arbitrary precision by a neural network. First, we prove this result for sigmoidal functions, which behave like a sigmoid as $x \to \pm \infty$. Define the hyperplane
+\begin{gather*}
+    P_{\textbf{w}, \theta} = \Big\{ \textbf{x} \in \mathbb{R}^n : \textbf{w}^T\textbf{x} + \theta = 0 \Big\} \\
+    H^+_{\textbf{w},\theta} = \Big\{ \textbf{x} \in \mathbb{R}^n : \textbf{w}^T\textbf{x} + \theta > 0\Big\} \;\;\;\; H^-_{\textbf{w},\theta} = \Big\{ \textbf{x} \in \mathbb{R}^n : \textbf{w}^T\textbf{x} + \theta < 0\Big\}
+\end{gather*}
+
+\begin{lemma}
+    Given a measure $\mu \in \mathcal{M}(I_n)$, the space of all measures on $I_n$, if $\mu(P_{\textbf{w},\theta}) = 0$ and $\mu(H^+_{\textbf{w},\theta}) = 0$ for all $\mathbf{w} \in \mathbb{R}^n$ and $\theta \in \mathbb{R}$, then $\mu \equiv 0$.
+\end{lemma}
+
+\begin{theorem}
+    Any continuous sigmoidal function is discriminatory.
+\end{theorem}
+\begin{proof}
+    Given a measure $\mu \in \mathcal{M}(I_n)$, consider a sigmoidal function $\sigma$ such that the integral of $\sigma(\textbf{w}^T\textbf{x}+\theta)$ over $I_n$ is zero. Now construct a sequence of continuous functions $\sigma_{\lambda} = \sigma\big(\lambda(\textbf{w}^T\textbf{x}+\theta)+\phi\big)$.
+    \begin{equation*}
+        \lim_{\lambda \to \infty} \sigma_{\lambda}(x) = \begin{cases}
+            1 \;\;\;\;\;\;\; \text{if} \;\; \textbf{w}^T \textbf{x} > 0 \\
+            0 \;\;\;\;\;\;\; \text{if} \;\; \textbf{w}^T \textbf{x} < 0 \\
+            \sigma(\phi) \;\; \text{if} \;\; \textbf{w}^T \textbf{x} = 0
+        \end{cases}
+        = \gamma(x) \;\;\;\;\; \text{pointwise convergence}
+    \end{equation*}
+
+    Since the sequence is bounded (because $\sigma$ is sigmoidal), we can apply the Dominated Convergence Theorem and interchange the limit and the integral:
+    \begin{gather*}
+        \lim_{\lambda \to \infty} \int_{I_n} \sigma(\textbf{w}^T\textbf{x}+\theta) \de \mu(\textbf{x}) = \int_{I_n} \gamma(x) \de \mu(x) \\
+        \int_{I_n} \gamma(x) \de \mu(x) = \int_{H^+_{\textbf{w}, \theta}} \gamma(x) \de \mu(x) + \int_{H^-_{\textbf{w},\theta}} \gamma(x) \de \mu(x) + \int_{P_{\textbf{w},\theta}} \gamma(x) \de \mu(x) = \\
+        = \mu(H^+_{\textbf{w},\theta}) + \sigma(\phi) \mu(P_{\textbf{w},\theta}) = 0
+    \end{gather*}
+
+    The parameter $\phi$ can be chosen arbitrarily. In particular, we can first let $\phi \to -\infty$, so that $\sigma(\phi) \to 0$ and hence $\mu(H^+_{\textbf{w},\phi}) = 0$, and then let $\phi \to \infty$, where $\sigma(\phi) \to 1$. In the end, we conclude that both $\mu(P_{\textbf{w},\theta}) = 0$ and $\mu(H^+_{\textbf{w},\theta}) = 0$, so $\mu \equiv 0$.
+\end{proof}
+
+\begin{theorem}
+    The ReLU activation function is $1-$discriminatory.
+\end{theorem}
+\begin{proof}
+    Given a measure $\mu \in \mathcal{M}(I_n)$, assume the following holds:
+    \begin{equation*}
+        \int_0^1 ReLU(wx+\theta) \de \mu(x) = 0 \;\;\;\;\; \forall w,\theta \in \mathbb{R}
+    \end{equation*}
+    Notice that the sum of two ReLUs with opposite signs results in a sigmoidal function. In particular, define 
+    \begin{gather*}
+        g(x) = ReLU(y^Tx+\theta_1) - ReLU(y^Tx+\theta_2) \;\; \text{if} \;\; y \neq 0 \\
+        g(x) = f(\theta) = \begin{cases}
+            0 \;\; \theta < 0 \\
+            \theta \;\; 0 < \theta < 1\\
+            1 \;\; \theta > 1
+        \end{cases} \;\; \text{if} \;\; y = 0
+    \end{gather*}
+
+    where $\theta_1 = -\frac{\theta}{y}$ and $\theta_2 = \frac{1-\theta}{y}$. Now integrate $g(x)$, which is sigmoidal:
+    \begin{gather*}
+        \int_0^1 g(x) \de \mu(x) = \int_0^1 ReLU(y^Tx + \theta_1) - ReLU(y^Tx + \theta_1) \de \mu(x) = \\
+        = \int_0^1 ReLU(y^Tx + \theta_1) \de \mu(x) - \int_0^1 ReLU(y^Tx + \theta_1) \de \mu(x) = 0 - 0 = 0
+    \end{gather*}
+    but by the previous theorem, since sigmoidal functions are discriminatory, we have $\mu \equiv 0$, hence ReLUs are also $1-$discriminatory.
+\end{proof}
 
 
 \end{document}
