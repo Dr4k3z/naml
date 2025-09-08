@@ -35,6 +35,138 @@
 
 \newpage
 
+\section{Singular Value Decomposition}
+Let $A \in \mathbb{R}^{n \times m}$ be a matrix of rank $r$. We know that $A^TA$ is symmetric and positive definite, so it can be diagonalized thanks to the spectral theorem $A^T A = V \Lambda V^T$, where the matrix of eigenvectors $V$ is orthogonal. What can be said about the rank of $A^T A$? Let $\textbf{x} \in \ker(A)$, then $A^T (A\textbf{x}) = A^T \textbf{0} = \textbf{0}$. Thus, $\textbf{x}$ also belongs to the kernel of $A^TA$. On the contrary, if $A^T A \textbf{x} = 0$, then using the positive definiteness
+
+\begin{equation*}
+    \textbf{x}^T (A^T A) \textbf{x} = \Vert A \textbf{x} \Vert^2 = 0 \;\; \iff \;\; A\textbf{x} = 0 \;\; \text{hence} \;\; \textbf{x} \in \ker(A) 
+\end{equation*}
+
+We've shown that $\ker(A) = \ker(A^TA)$, therefore the ranks must also be equal. Let $(\sigma_i,\textbf{v}_i)$ denote the eigenvalue-eigenvector couples of the matrix $A^T A$. Define $\textbf{u}_i = \frac{1}{\sigma_i}A\textbf{v}_i$ and stack them vertically into the matrix $U = [\textbf{u}_1,...,\textbf{u}_m]$. It's easy to this that $U$ is an orthogonal matrix
+
+\begin{equation*}
+    \textbf{u}_i^T \textbf{u}_j = \Big(\frac{A\textbf{v}_i}{\sigma_i}\Big)^T \Big( \frac{A\textbf{v}_j}{\sigma_j}\Big) = \frac{1}{\sigma_i \sigma_j} \textbf{v}_i^T A^TA \textbf{v}_j = \frac{1}{\sigma_i \sigma_j} \sigma_j^2 \textbf{v}_i^T \textbf{v}_j = \delta_{ij}
+\end{equation*}
+
+Lastly, notice that $\{ \textbf{u}_i \}$ are eigenvectors of $A A^T$, with the very same eigenvalues $\sigma_i^2$. Indeed, 
+
+\begin{equation*}
+    A A^T \textbf{u}_i = A A^T \frac{A \textbf{v}_i}{\sigma_i} = A \frac{A^TA \textbf{v}_i}{\sigma_i} = A \frac{\sigma^2_i \textbf{v}_i}{\sigma_i} = \sigma_i^2 \textbf{u}_i
+\end{equation*}
+
+These facts are proof of the existence of the Singular Value Decomposition for any matrix $A$. Let $\Sigma^2 = \Lambda = \text{diag}(\sigma_1^2,...,\sigma_m^2)$, then
+
+\begin{equation}
+    \begin{cases}
+        A^T A = V \Sigma^2 V^T \\
+        A A^T = U \Sigma^2 U^T 
+    \end{cases}
+    \;\; \implies \;\; A = U \Sigma V^T
+\end{equation}
+
+\begin{theorem}[Eckart-Young]
+    Let $A \in \mathbb{R}^{n \times m}$ with rank $r$. Let $A_k$ be the truncated approximation of the matrix $A_k = \sum_{i=1}^k \sigma_i \textbf{u}_i \textbf{v}_i^T$, with $k < r$. For both the Frobenius and the spectral norm, $A_k$ is the best rank-$k$ approximation of the original matrix $A$.
+    \begin{equation*}
+        \Vert A - A_k \Vert \leq \Vert A - B \Vert \;\;\;\; \forall B \;\; \text{rank }k
+    \end{equation*}
+
+    Moreover, the approximation error is bounded by $\sigma_{k+1}$ for the spectral norm and by $\big(\sum \sigma_i^2)^{1/2}$ for Frobenius one, respectively.
+\end{theorem}
+\begin{proof}
+    Let $B \in \mathbb{R}^{n\times m}$ with rank $k$, so that $\dim\big(\ker(B)\big) = n-k$, where we've assumed $n \leq m$. Define $V_{k+1} = [\textbf{v}_1, ..., \textbf{v}_{k+1}]$, an $n \times (k+1)$ matrix with rank $k+1$. Hence
+
+    \begin{equation*}
+        \dim\big(\ker(B)\big) + \dim\big(\text{Col}(V_{k+1})\big) = n-k+k+1 = n+1
+    \end{equation*}
+
+    Since both are subspaces of $\mathbb{R}^n$, the two must have a non-zero intersection $I = \ker(B) \cap \text{Col}(V_{k+1})$. Let $\textbf{w} \in I$ with unitary norm $\Vert \textbf{w} \Vert = 1$. 
+
+    \begin{equation*}
+        \textbf{w} = \sum_{i=1}^{k+1} w_i \textbf{v}_i \;\; \implies \;\; \Vert \textbf{w} \Vert = \sum_{i=1}^{k+1} w_i^2 \Vert \textbf{v}_i \Vert^2 = \sum_{i=1}^{k+1} w_i = 1
+    \end{equation*}
+
+    Now consider the spectral norm $\Vert A - B\Vert_2^2$, which by definition is the supremum of $\Vert (A-B)\textbf{x} \Vert^2$, for all unitary vectors $\textbf{x}$. Therefore, setting $\textbf{x} = \textbf{w}$
+
+    \begin{equation*}
+        \Vert A-B \Vert_2^2 \geq \Vert (A-B)\textbf{w} \Vert^2 = \Vert A\textbf{w} - B\textbf{w} \Vert^2
+    \end{equation*}
+
+    But $\textbf{w}$ is the kernel of $B$, so $B\textbf{w} = 0$. Inside of the previous inequality, we also perform the $SVD$ decomposition
+
+    \begin{gather*}
+        \Vert A - B \Vert_2^2 \geq \Vert A \textbf{w} \Vert^2 = \textbf{w}^T A^T A \textbf{w} = \textbf{w}^T V \Sigma U^T U \Sigma V^T \textbf{w} = \\
+        = \textbf{w}^T V \Sigma^2 V^T \textbf{w} = \sum_{i=1}^{k+1} \sigma_i^2 w_i^2 \geq \sigma_{k+1}^2 \sum_{i=1}^{k+1} w_i^2 = \sigma_{k+1}^2
+    \end{gather*}
+
+    The spectral norm is also define as the biggest singular value. Since $A$ and $A_k$ share the first $k$ singular values, the first non-zero singular value is actually $\sigma_{k+1}^2$, which is also the greatest. 
+
+    \begin{equation*}
+        \Vert A - A_k \Vert_2^2 = \sigma_{k+1}^2 \leq \Vert A - B \Vert^2_2 \;\;\;\; \forall B \;\; \text{rank }k
+    \end{equation*}
+
+    Thanks to Weyl's inequality, $\sigma_{i+j-1}(X+Y) \leq \sigma_i(X)+\sigma_j(Y)$, we can work out the error estimate for the Frobenius norm. Let $X = A-B$, so that
+
+    \begin{equation*}
+        \sigma_{i+k}(A) \leq \sigma_{i}(A-B) + \sigma_{k+1}(B) = \sigma_{i}(A-B)
+    \end{equation*}
+
+    because $B$ has rank $k$ hence all the singular values after $k+1$ are zero. The Frobenius norm of the approximation error is
+
+    \begin{equation*}
+        \Vert A - A_k \Vert_F = \sum_{i=k+1}^r \sigma_i(A)^2 = \sum_{i=1}^{r-k} \sigma_{i+k}(A)^2 \leq \sum_{i=1}^{r-k} \sigma_i(A-B)^2 \leq \sum_{i=1}^n \sigma_i(A-B)^2 = \Vert A-B \Vert^2_F
+    \end{equation*}
+\end{proof}
+
+Singular Value Decomposition can be used to solve linear regression problems, since solving the normal equations can be numerically challenging. Let $X \in \mathbb{R}^{n \times p}$ and $\textbf{y} \in \mathbb{R}^n$, and define the \textit{psuedo-inverse} $X^+ = (X^TX)^{-1} X^T$
+ 
+\begin{gather*}
+    X^+ = \Big( V \Sigma^T U^T U \Sigma V^T \Big)^{-1} V \Sigma^T U^T = \Big( V \Sigma^T \Sigma V^T \Big)^{-1} V \Sigma^T U^T = \\
+    = \big(V^T\big)^{-1} \big( V \Sigma^T\Sigma)^{-1} V \Sigma^T U^T = \big(V^T\big)^{-1} \Sigma^{-1} (V \Sigma^T)^{-1} V \Sigma^T U^T = \\
+    = (V^T)^{-1} (\Sigma^T \Sigma)^{-1} \Sigma^T U^T = V \Sigma^+ U^T
+\end{gather*}
+
+Since $\Sigma$ is (almost) diagonal, its pseudo-inverse is a matrix with entries $\Sigma^+_{ii} = 1/\sigma_i$. Therefore, the regression weights can be easily computed $\textbf{w} = V \Sigma^+ U^T \textbf{y}$. The use ordinary least squares is not always the best approach, as they tend to over fit the training data. From a mathematical perspective, suppose the true model is $\textbf{y} = X \textbf{w}^* + \boldsymbol\epsilon$, where $\boldsymbol{\epsilon}$ is some form of error source. OLS yields the weights
+
+\begin{equation*}
+    \textbf{w}_{OLS} = (X^TX)^{-1}X^T \textbf{y} = (X^TX)^{-1}X^T (X\textbf{w}^* + \boldsymbol{\epsilon}) = \textbf{w}^* + (X^TX)^{-1}X^T \boldsymbol{\epsilon}
+\end{equation*}
+
+Applying the SVD decomposition, we get $\textbf{w}_{OLS} = \textbf{w}^* + V \Sigma U^T\boldsymbol{\epsilon} = \textbf{w}+\boldsymbol{\delta}$. Let's interpret this expression geometrically: $U,V$ are just rotations, that keep the norm constant, while $\Sigma^+$ is doing the scaling. If the last few singular values $\sigma_p$ are very small, as is usually the case, the entries of pseudo-inverse $\Sigma^+ = \{ 1/\sigma_i \}_i$ will be huge, effectively amplifying the error terms. This issue calls for a slight modification in the objective function from which the OLS coefficients come from, introducing a \textit{regularization} term. The most famous regularization technique is called \textit{ridge regression}
+
+\begin{equation*}
+    \hat{\textbf{w}}_R = \text{arg}\min_{\textbf{w}} \Vert y - X \textbf{w} \Vert^2 + \lambda \Vert \textbf{w} \Vert^2
+\end{equation*}
+
+which penalizes bigger weights, with respect to the Euclidean norm. Computing the gradient of the objective function, we can derive an anylitical solution to this problem
+
+\begin{gather*}
+    \nabla f(\textbf{w}) = \nabla \Big( \textbf{y}^T \textbf{y} - 2 \textbf{w}^T X^T \textbf{y} + \textbf{w}^T X^T X \textbf{w} + \lambda \textbf{w}^T \textbf{w}\Big) = 0 \\
+    -2 X^T \textbf{y} + 2 X^T X \textbf{w} + 2\lambda \textbf{w} = 0 \\
+    \implies \;\; \hat{\textbf{w}}_R = (X^T X + \lambda I)^{-1} X^T \textbf{y}
+\end{gather*}
+
+Through the SVD, we can study the effect of the hyper-parameter $\lambda$ on the pseudo-inverse and on the ridge coefficients 
+
+\begin{gather*}
+    \hat{\textbf{w}}_R = \big( V \Sigma^T U^T U \Sigma V^T + \lambda I \big)^{-1} V \Sigma^T U^T \textbf{w} = \big( V \Sigma^T \Sigma V^T + \lambda I \big)^{-1} V \Sigma^T U^T \textbf{y} = \\
+    = \Big[ V \Big( \Sigma^T \Sigma + \lambda I \Big) V^T \Big]^{-1} V \Sigma^T U^T \textbf{y} = V \Big( \Sigma^T \Sigma + \lambda I \Big)^{-1} \Sigma^T U^T \textbf{y}
+\end{gather*}
+
+The term $(\Sigma^T\Sigma + \lambda I)^{-1}\Sigma^T$ is replacing the initial pseudo-inverse $\Sigma^+$. This new matrix is still quasi-diagonal, but the entries are not longer $1/\sigma_i$ but rather $\frac{\sigma_i}{\sigma_i^2+\lambda}$. So, even for the smallest singular values, the amplification of the error terms is limited. By tuning the value of $\lambda$, we can control the effect of the smaller singular values
+
+\begin{itemize}
+    \item If $\sigma_p >> \lambda$, then $\frac{\sigma_p}{\sigma_p^2 + \lambda} \approx \frac{1}{\sigma_p}$
+    \item If $\sigma_p << \lambda$, then $\frac{\sigma_p}{\sigma_p^2 + \lambda} = \frac{1}{\sigma_p + \frac{\lambda}{\sigma_p}} \approx 0$
+\end{itemize}
+
+Another common regularization technique is the \textit{Least Absolute Shrinkage and Selection Operator (LASSO)}, which is used to achieve sparsity in the weights vector
+
+\begin{equation*}
+    \hat{\textbf{w}}_L = \text{arg}\min_{\textbf{w}} \Vert y - X \textbf{w} \Vert^2 + \lambda \Vert \textbf{w} \Vert_1
+\end{equation*}
+
+For higher values of $\lambda$, most of the weights vector will be zero, while for smaller values it'll be less sparse. The optimal value is not known a priori and must be somewhat tuned through a cross validation procedure.
+
 \section{Kernel methods}
 As long as we limit ourselves with linear models, separation boundaries will also be linear. A first solution to overcome this limit, without losing mos of the perks of linear models is to enrich the feature space to include also non-linear features.
 
@@ -57,7 +189,7 @@ This model can still be fit with normal equations, which is the true advantage o
     = V \Sigma^T (\Sigma^T \Sigma + \lambda I)^{-1} U^T \textbf{y} = V \Sigma^T U^T U (\Sigma^T \Sigma + \lambda I)^{-1} U^T \textbf{y} = X \boldsymbol{\beta}
 \end{gather*}
 
-where we've introduced a new symbol $\boldsymbol{\beta}$. In the context of enriched features, everything still holds simply replacing $X$ with the enriched features matrix $\Phi$. Moreover, we can write a more convenient form for the new parameter $\boldsymbol{\beta}$
+where we've introduced a new symbol $\boldsymbol{\beta}$. In the context of enriched features, everything still holds simply replacing $X$ with the enriched features matrix $\Phi^T$. Moreover, we can write a more convenient form for the new parameter $\boldsymbol{\beta}$
 
 \begin{gather*}
     \boldsymbol{\beta} = U(\Sigma^T \Sigma + \lambda I)^{-1} U^T \textbf{y} = \big[ U (\Sigma \Sigma^T + \lambda I)^{-1} U^T\big]^{-1} \textbf{y} = \\
@@ -76,9 +208,320 @@ Another common kernel function is the \textit{Gaussian Kernel}, which actually c
     K(\textbf{x}_i, \textbf{x}_j) = \exp\Bigg\{ - \frac{\Vert \textbf{x}_i - \textbf{x}_j \Vert}{2 \sigma^2} \Bigg\}
 \end{equation*}
 
+When computing the weights vector $\boldsymbol{\beta} = (\Phi\Phi^T + \lambda I)^{-1}\textbf{y}$, instead of manually assembling $\Phi \Phi^T$ we just use the kernel, so $K = \Phi \Phi^T = \{ K_{ij} \}$. When predicting a new sample, we have
+
+\begin{equation*}
+    \hat{y} = \hat{\textbf{w}}_R^T \phi(\textbf{x}) =  \big( \Phi^T \boldsymbol{\beta} \big)^T \phi(\textbf{x}) = \sum_{i=1}^n \beta_i \phi(\textbf{x}_i)^T \phi(\textbf{x}) = \sum_{i=1}^n \beta_i K(\textbf{x}_i, \textbf{x})
+\end{equation*}
+
+we are measuring a generalized distance between the new sample $\textbf{x}$ and the training set. The values $\beta_i$ give a proxy of the importance of the $i-$th feature. Consider a polynomial kernel of degree $q$; the feature vector is mapped into $\mathbb{R}^{p^q}$, which means that computing the scalar product $\phi(\textbf{x}_i)^T\phi(\textbf{x}_j)$ would require $O(p^q)$ operations. On the other hand, the polynomial kernel only requires $O(p)$ operations to compute.
+
 \section{Backpropagation}
+\textit{Automatic Differentiation} allows neural networks to compute \textit{analytically}, up to machine precision, the gradients of the loss function. This technique is not based on the numerical approximation of derivatives, for instance using finite differences, but rather on a valuation of a computational graph, which yields exact results.
+
+Given a function $f : \mathbb{R}^{n} \to \mathbb{R}^m$ we define its \textit{Wenger List}:
+\begin{itemize}
+    \item Inputs: $v_{i-n} = x_i$ for $i = 1,2,...,n$
+    \item Intermediates: $v_i$ for $i = 1,2,...,l$
+    \item Outputs: $y_{m-i}$ for $i = m-1, ...,0$
+\end{itemize}
+
+Derivatives of the outputs with respect to the inputs are computed by iterating the chain rule. Let $a,b \in \mathbb{R}$ and $\varepsilon$ is a nihil-potent matrix of order two: $\varepsilon \neq 0$ and $\varepsilon^2 = 0$. We call $a+ b\epsilon$ a dual number. Dual numbers follow the basic arithmetic of complex numbers, meaning
+
+\begin{gather*}
+    (a+b\varepsilon) + (c+d\varepsilon)= (a+c) + (d+b)\varepsilon \\
+    (a+b\varepsilon) \cdot (c+d\varepsilon) = ac + (ad+bd)\varepsilon
+\end{gather*}
+
+Now consider an analytical function $f(x)$, valued in $x+\varepsilon$. Through Taylor expansion, we get
+
+\begin{equation*}
+    f(x+\varepsilon) = f(x) + f'(x) \varepsilon + \frac{1}{2} f''(x) \varepsilon^2 + O(\varepsilon^3) \;\; \implies \;\; f(x+\varepsilon) = f(x) + f'(x) \varepsilon
+\end{equation*}
+
+This expression can be used to compute, through one single function evaluation, the value of the function itself and of its derivative. For instance, let $f(x) = x^2$:
+
+\begin{gather*}
+    f(x+\varepsilon) = (x+\varepsilon)^2 = x^2 + 2x \varepsilon + \varepsilon^2 \\
+    x^2 + 2x \varepsilon = f(x) + f'(x) \varepsilon
+\end{gather*}
+
+Hence we have compute the derivative $f'(x) = 2x$. Using the chain rule, we can compute the derivative of a composition of functions
+
+\begin{equation*}
+    f(g(x+\epsilon)) = f\big(g(x)+\epsilon g'(x) \big) = f(g(x)) + f'(g(x)) g'(x) \epsilon
+\end{equation*}
+
+Computing the gradient of a function $f : \mathbb{R}^n \to \mathbb{R}^m$, using the algorithm we've described above, would require around $n \times p$ operations. However, in the context of neural networks $m >> n$, so it's actually more convenient to apply the Automatic Differentiation (\textit{AD}) backward.
+
+Consider a deep neural network, with a total of $L$ layers. Let $\textbf{w}^l$ be the matrix of weights from the $(l-1)-$th to the $l-$th layer and $\textbf{b}^l$ the baises. We denote with $a_j^l$ the value of the $j-$th neuron of the $l-$th layer. If $\sigma(\cdot)$ is the activation function of the layer, then
+
+\begin{equation*}
+    a_j^l = \sigma\Big( \sum_k w_{jk}^l a_k^{l-1} + b_j^l \Big) \;\;\;\; \textbf{a}^l = \sigma(\textbf{w}^l \textbf{a}^{l-1} + \textbf{b}^l) \equiv \sigma(\textbf{z}^l)
+\end{equation*}
+
+Let $J$ be the loss function of the network, which must depend only of the weights and biases. Our goal is to compute the gradient of $J$ with respect to these two, using Automatic Differentiation.
+
+\begin{equation*}
+    \delta_j^l = \frac{\partial J}{\partial z_j^l} \;\;\;\; \boldsymbol{\delta}^l = [\delta^l_1 \cdot\cdot\cdot \delta^l_n]^T \equiv \frac{\partial J}{\partial \textbf{z}^l}
+\end{equation*}
+
+\begin{gather}
+    \delta_j^L = \frac{\partial J}{\partial z_j^L} = \sum_{k} \frac{\partial J}{\partial a_k^L} \frac{\partial a^L_k}{\partial z_j^L} = \frac{\partial J}{\partial a^L_j}\frac{\partial a^L_j}{\partial z_j^L} = \frac{\partial J}{\partial a_j^L} \sigma'(z_j^L) \notag \\
+    \boxed{
+    \boldsymbol{\delta}^L = \nabla_{a^L} J .* \sigma(\textbf{z}^L)
+    }
+\end{gather}
+
+where $.*$ denotes the component wise product. Having figured out the last layer, we can derive a backward recursive function to compute the gradients of layer $l$ given those of layer $l+1$:
+
+\begin{gather}
+    \delta_j^l = \frac{\partial J}{\partial z_j^l} = \sum_k \frac{\partial J}{\partial z_k^{l+1}} \frac{\partial z^{l+1}_k}{\partial z^l_j} = \sum_k \frac{\partial z_k^{l+1}}{\partial z_j^l} \delta^{l+1}_k \notag  \\
+    z^{l+1}_k = \sum_j w_{kj}^{l+1} a_j^l + b^{l+1}_k = \sum_j w_{kj}^{l+1} \sigma(z_j^l) + b_k^{l+1} \notag \\
+    \implies \;\; \delta_j^l = \sum_k \frac{\partial}{\partial z_j^l} \Bigg( \sum_j w_{kj}^{l+1} \sigma(z_j^l) + b_k^{l+1} \Bigg) \delta_k^{l+1} = \sum_k w^{l+1}_{kj} \sigma'(z_j^l) \delta^{l+1}_k \notag \\
+    \boxed{\boldsymbol{\delta}^l = \big[ (\textbf{w}^{l+1})^T \boldsymbol{\delta}^{l+1} \big] .* \sigma'(\textbf{z}^l)}
+\end{gather}
+
+Lastly, we compute the derivatives of the cost function directly with respect to weights and biases
+
+\begin{gather}
+    \frac{\partial J}{\partial b_j^l} = \frac{\partial J}{\partial z_j^l} \frac{\partial z_j^l}{\partial b_j^l} = \frac{\partial J}{\partial z_j^l} = \delta_j^l \\
+    \frac{\partial J}{\partial w^l_{jk}} = \frac{\partial J}{\partial z_j^l}\frac{\partial z^l_j}{\partial w^l_{jk}} = a^{l-1}_j \delta_j^l
+\end{gather}
+
+Equation $(3.0.2)$ highlights a common issue when training neural networks, known as \textit{Vanishing Gradient problem}. Sigmoidal activation functions tend to be flat as $z \to \pm \infty$, which means that their gradient tends to zero. Hence, the learning effectively stops, because the updates are negligible.
+
+Cost functions are specific to the particular task at hand, usually either a regression or a classification. For the former, one usually uses either mean squared error or mean absolute error. The latter deserves more attention, as if we were to pick a sigmoid function we'd again encounter the afore mentioned vanishing gradient problem. The solution researchers have come up with is the \textit{Cross-Entropy} correlation function
+
+\begin{equation}
+    J = -\frac{1}{N} \sum_{i=1}^N y_i \log(a) + (1-y_i) \log(1-a)
+\end{equation}
+
+$J$ is positive for any $a$ and it'll converge to zero as $a \to y$. Computing the gradients, we have
+
+\begin{gather*}
+    \frac{\partial J}{\partial w_i} = -\frac{1}{N} \sum_{j=1}^N \Big( \frac{y_j}{\sigma(z)}  - \frac{1-y_j}{1-\sigma(z)}\Big) \sigma'(z) x_j = -\frac{1}{N} \sum_{j=1}^N \frac{\sigma'(z) x_j}{\sigma(z) \big(1-\sigma(z)\big)} \big( \sigma(z) - y \big) = \\
+    = -\frac{1}{N} \sum_{j=1}^N x_i \big( \sigma(z) - y \big) \;\;\;\; \text{the gradient does not depend on $\sigma'(z)$}
+\end{gather*}
+
+In general, are there other functions with the same property of the cross-entropy, whose gradient does not depend on $\sigma'(z)$? Consider a single layer neural network, so that
+
+\begin{gather*}
+    \frac{\partial J}{\partial w} = (a-y) \sigma'(z) x \;\;\;\; \frac{\partial J}{\partial b} = (a-y) \sigma'(z)
+\end{gather*}
+
+We'd like these two derivatives to not depend on $\sigma'(z)$. Applying the chain rule, we get
+
+\begin{gather*}
+    \frac{\partial J}{\partial b} = \frac{\partial J}{\partial a} \frac{\partial a}{\partial z}\frac{\partial z}{\partial b} = \frac{\partial J}{\partial a} \sigma'(z) = \frac{\partial J}{\partial a} \sigma(z)\big(1 - \sigma(z)\big) = \frac{\partial J}{\partial a} a(1-a) \\
+    \frac{\partial J}{\partial a} a(1-a) = (a-y) \;\; \implies \;\; \frac{\partial J}{\partial a} = \frac{a-y}{a(1-a)} \\
+    J(a) = \int \frac{a-y}{a(1-a)} \de a = -\big(y \log(a) + (1-y)\log(1-a) \big) + c
+\end{gather*}
+
+but this is exactly the expression of the cross entropy function.
 
 \section{Gradient Descent Method}
+
+We deal with the problem of minimizing a function $f : \mathbb{R}^n \to \mathbb{R}$, differentiable and convex. While differentiability is usually satisfied by loss functions of neural networks, convexity may not. However, it's convenient to work out the theory for this simplified scenario. We want to devise an iterative scheme, that given a point $\textbf{x}_0$, will advance following an \textit{update rule}
+
+\begin{equation*}
+    \textbf{x}_{k+1} = \text{arg}\min \tilde{f}_k(\textbf{x})
+\end{equation*}
+
+where $\tilde{f}_k$ is an approximation of the actual function $f$, which we want to be easy to compute. In particular, we choose a quadratic approximating function, of the shape $\tilde{f}_k(\textbf{x}) = (\textbf{x}-\textbf{x}_k)^T A (\textbf{x}-\textbf{x}_k) + \textbf{b}_k^T(\textbf{x}-\textbf{x}_k) + c_k$. First, we simplify a bit the expression: instead of letting $A$ be a general matrix, we set $A = \frac{1}{2\eta} I$, where $\eta$ is a hyper-parameter we call \textit{learning rate}. Our approximation must satisfy two important properties:
+
+\begin{itemize}
+    \item The value of the approximating function in $\textbf{x}_k$ must be equal to the true value, $\tilde{f}_k(\textbf{x}_k) = f(\textbf{x}_k)$
+
+    \item The same must hold for the gradient as well, $\nabla \tilde{f}(\textbf{x}_k) = \nabla f(\textbf{x}_k)$. 
+\end{itemize}
+
+\begin{gather*}
+    c_k = f(\textbf{x}_k) \;\;\;\; g_k = \nabla f(\textbf{x}_k) \\ 
+    \implies \tilde{f}_k(\textbf{x}) = f(\textbf{x}_k) + \nabla f(\textbf{x}_k)^T (\textbf{x} - \textbf{x}_k) + \frac{1}{2\eta} (\textbf{x}-\textbf{x}_k)^T (x - \textbf{x}_k)
+\end{gather*}
+
+By setting the gradient of the approximating function to zero, we obtain the update rule of the \textit{Gradient Descent Method (GD)}
+
+\begin{gather}
+    \nabla \tilde{f}_k(\textbf{x}) = 0 \;\;\;\; \nabla f(\textbf{x}_k) + \frac{1}{2\eta} \Big( 2\textbf{x} - 2 \textbf{x}_k \Big) = 0 \\ \notag
+    \implies \;\; \textbf{x} = \textbf{x}_k - \eta \nabla f(\textbf{x}_k)
+\end{gather}
+
+The learning rate $\eta$ determines how big of a step it should take along the direction of the gradient. In practice, we also need to define a stopping criteria, to stop the iterations of the method. One usually specifies both the actual condition, like for instance $\Vert \nabla f(\textbf{x}_k) \Vert \leq \epsilon$ and a maximum number of iterations, to deal with divergence.
+
+Modern minimization algorithms will adjust the learning rate $\eta_k$ at every step with a dynamic formula. For instance, we could set a up a \textit{backtracking line search}: say the initial learning rate is set to $\eta = 1$; if the \textit{sufficient decrease condition} is met
+
+\begin{equation*}
+    f\big(\textbf{x}_k - \eta_k \nabla f(\textbf{x}_k) \big) \leq f(\textbf{x}_k) - \alpha \eta_k \Vert \nabla f(\textbf{x}_k) \Vert^2
+\end{equation*}
+
+then we keep the same learning rate, otherwise we reduce it by a factor $\beta < 1$. In theory, we'd always like to pick the learning rate that minimizes the function itself. This is called \textit{exact line search} and it's often of no practical use, as to solve the initial optimization problem we've set up another. However, in the few cases where an analytical formula is available, like the quadratic one, it could mean a drastic increase in performance. 
+
+\begin{theorem}
+    Let $f : \mathbb{R}^n \to \mathbb{R}$ be a differential, convex function, with Lipschitz-continuous gradient $\Vert \nabla f(\textbf{x}) - \nabla f(\textbf{y}) \Vert \leq L \Vert \textbf{x} - \textbf{y} \Vert $ for $L > 0$. Given a learning rate $\eta \leq \frac{1}{L}$, the $k-$th iteration of the gradient descent method yields at most an error
+
+    \begin{equation}
+        f(\textbf{x}_k) - f(\textbf{x}^*) \leq \frac{\Vert \textbf{x}_0 - \textbf{x}^* \Vert}{2 \eta k}
+    \end{equation}
+
+    where $\textbf{x}^*$ is the actual minimum of the function and $\textbf{x}_0$ the starting point.
+\end{theorem}
+\begin{proof}
+Recall that since the gradient is Lipschitz continuous, the matrix $H - LI$, where $H$ is the Hessian, is negative semi-definite. Let's approximate the function $f(\textbf{y})$ using a second order Taylor expansion
+
+\begin{gather*}
+    f(\textbf{y}) \leq f(\textbf{x}) + \nabla f(\textbf{x})^T (\textbf{y} - \textbf{x}) + \frac{1}{2}(\textbf{y}-\textbf{x})^T H (\textbf{y}-\textbf{x}) \\
+    \leq f(\textbf{x}) + \nabla f(\textbf{x})^T (\textbf{y}-\textbf{x}) + \frac{1}{2} L \Vert \textbf{y} - \textbf{x} \Vert
+\end{gather*}
+
+We now value this expansion in the point $\textbf{x}^+ = \textbf{x} - \eta \nabla f(\textbf{x}) $
+
+\begin{gather*}
+    f(\textbf{x}^+) \leq f(\textbf{x})+ \nabla f\big(\textbf{x})^T (\textbf{x}-\eta \nabla f(\textbf{x}\big) - \textbf{x}) + \frac{1}{2} L \Vert \textbf{x}-\eta \nabla f(\textbf{x}) + \textbf{x} \Vert^2 = \\
+    = f(\textbf{x}) - \eta \nabla f(\textbf{x})^T \nabla f(\textbf{x}) + \frac{1}{2} L \eta^2 \Vert \nabla f(\textbf{x}) \Vert^2 = \\
+    = f(\textbf{x}) - \Big( 1 - \frac{1}{2} L \eta \Big) \eta \Vert \nabla f(\textbf{x}) \Vert^2
+\end{gather*}
+
+Since we've assumed $\eta < \frac{1}{L}$, the factor in front of the norm of the gradient is actually bounded by $-\frac{1}{2}$. Thus, we are left with
+
+\begin{equation*}
+    f(\textbf{x}^+) \leq f(\textbf{x}) - \frac{1}{2} \eta \Vert \nabla f(\textbf{x}) \Vert^2
+\end{equation*}
+
+What this inequality means is that through one iteration of the gradient descent algorithm, we've gotten a smaller value of the function. This is very promising and we can now focus on the error with respect to the true minimum $\textbf{x}^*$. Recall that $f(\textbf{x})$ is convex, therefore $f(\textbf{x}^*) \geq f(\textbf{x}) + \nabla f(\textbf{x})^T (\textbf{x}^*-\textbf{x})$. Combining this notion with the previous statement, we get
+
+\begin{gather*}
+    f(\textbf{x}^+) \leq f(\textbf{x}^*) - \nabla f(\textbf{x}) (\textbf{x}^*-\textbf{x}) - \frac{1}{2} \eta \Vert \nabla f(\textbf{x}) \Vert^2 \\
+    f(\textbf{x}^+) - f(\textbf{x}^*) \leq \frac{1}{2\eta} \Big( 2\eta \nabla f(\textbf{x})^T (\textbf{x}-\textbf{x}^*) - \eta^2 \Vert \nabla f(\textbf{x} ) \Vert^2 \Big) = \\
+    = \frac{1}{2\eta} \Big( 2\eta \nabla f(\textbf{x})^T (\textbf{x}-\textbf{x}^*) - \eta^2 \Vert \nabla f(\textbf{x}) \Vert^2 - \Vert \textbf{x} - \textbf{x}^* \Vert^2 + \Vert \textbf{x} - \textbf{x}^* \Vert^2 \Big) = \\
+    = \frac{1}{2\eta} \Big( \Vert \textbf{x} - \textbf{x}^* \Vert^2 - \Vert \textbf{x} - \textbf{x}^* - \eta \nabla f(\textbf{x}) \Vert^2  \Big) = \frac{1}{2\eta} \Big( \Vert \textbf{x} - \textbf{x}^* \Vert^2 - \Vert \textbf{x}^+ - \textbf{x}^* \Vert^2  \Big)
+\end{gather*}
+
+This expression holds for a single iteration of gradient descent. We can apply it iteratively, building a sequence $\textbf{x}_i$ and summing up the results 
+
+\begin{gather*}
+    \sum_{i=1}^k f(\textbf{x}_i) - f(\textbf{x}^*) \leq \sum_{i=1}^k \frac{1}{2\eta} \Big( \Vert \textbf{x}_{i-1} - \textbf{x}^* \Vert^2 - \Vert \textbf{x}_i - \textbf{x}^* \Vert^2 \Big) \\
+    \sum_{i=1}^k f(\textbf{x}_i) - f(\textbf{x}^*) \leq \frac{1}{2\eta} \Vert \textbf{x}_0 - \textbf{x}^* \Vert^2
+\end{gather*}
+
+Since we've shown $f(\textbf{x}_i)$ are decreasing, we can derive a another inequality for the left term
+
+\begin{gather*}
+    \sum_{i=1}^k f(\textbf{x}_i) - f(\textbf{x}^*) \geq \sum_{i=1}^k f(\textbf{x}_k) - f(\textbf{x}^* ) = k \Big( f(\textbf{x}_k) - f(\textbf{x}_i) \Big) \\
+    \implies f(\textbf{x}_k) - f(\textbf{x}^*) \leq \frac{1}{2\eta k} \Vert \textbf{x}_0 - \textbf{x}^* \Vert^2
+\end{gather*}
+
+\end{proof}
+
+
+In the context of neural networks, we usually deal with cost functions that are summed over the training set $\{ (x_i,y_i) \}$ for $i = 1,2,...,N$. More over, most cost functions can be written as 
+
+\begin{equation*}
+    J(\textbf{x}) = \frac{1}{N} \sum_{i=1}^N J_i(\textbf{x})
+\end{equation*}
+
+where $J_i(\textbf{x})$ is the cost function on the $i-$th sample. Applying the gradient descent algorithm means computing $N$ times the gradient $\nabla J_i(\textbf{x}_k)$ at each iteration, which turns out to be too expensive in terms of computational costs. The solution to this problem is to value the gradient not on the whole training set, but rather on a randomly picked set of samples, called \textit{batch}. This algorithm is known as \textbf{stochastic gradient descent}.
+
+Let's first discuss the case where the batch size is one. At each iteration, we randomly pick an index $i_k \in \{1,2,...,N\}$ and evaluate the gradient in that point
+
+\begin{equation*}
+    \textbf{x}_{k+1} = \textbf{x}_k - \eta_k \nabla J_{i_k}(\textbf{x}_k)
+\end{equation*}
+
+The dynamics of this algorithm can be divided into two phases. While not strictly monotonic, in the first stage the method descends, roughly tracking the path of the original gradient descent; as it approaches the optimum, the trajectory becomes highly chaotic, jumping around with little net progress. The former behaviour is typical of the \textit{far out region}, whereas the chaotic and seemingly random trajectories characterise the \textit{confusion region}. For example, consider the simple loss function $J_i(x) = \frac{1}{2N}(a_i x + b_i)^2$, whose gradient is zero $\nabla J_i(x) = 0$ for $x^*_i = \frac{b_i}{a_i}$. The actual loss function is the sum over all samples $J(x) = \sum J_i(x)$. In the far out region, the sign of the gradient $\nabla J_i(x)$ typically matches that of $\nabla J(x)$, so the descent paths obtained using the whole dataset or a single batch are broadly similar. In the confusion region, this alignment no longer holds; the paths diverge.
+
+In practice, instead of picking just one sample over the entire training set, we randomly select a few. This helps reduce the variance and the width of the confusion region. However, the batch size is much smaller than the size of the whole training set, usually in between $10$ to $20$ samples.
+
+To derive a convergence result for the Stochastic Gradient Descent we'll need the following assumptions:
+
+\begin{itemize}
+    \item There exists $L > 0$ such that $\vert \textbf{u}^T H \textbf{u} \vert \leq L \Vert \textbf{u} \Vert^2$
+    \item The function $J$ is $\mu-$strongly convex
+    \begin{equation*}
+        J(\textbf{y}) \geq J(\textbf{x}) + \nabla J(\textbf{x})^T(\textbf{y}-\textbf{x}) + \frac{\mu}{2} \Vert \textbf{y}-\textbf{x}\Vert^2
+     \end{equation*}
+     \item The gradient is bounded $\Vert \nabla J_i(\textbf{x}) \Vert \leq C$
+     \item The expected value of the randomly picked $i-$th term of the gradient is an unbiased estimate of the gradient itself
+     \begin{equation*}
+         \mathbb{E}\big[ \nabla J_i(\textbf{x}) \big] = \nabla J(\textbf{x})
+     \end{equation*}
+     \item The learning rate is $\eta < \frac{1}{2\mu}$
+\end{itemize}
+
+\begin{theorem}
+    If the above assumptions are satisfied, then
+    \begin{gather}
+        \mathbb{E}\big[ J(\textbf{w}_k) - J(\textbf{w}^*) \big] \leq (1-2\eta \mu)^k \big( J(\textbf{w}_0) - J(\textbf{w}^*) \big) + \frac{L\eta}{4\mu} C^2 \\
+        \mathbb{E}\big[ \Vert \textbf{w}_k - \textbf{w}^* \Vert \big] \leq (1-2\eta\mu)^k \Vert \textbf{w}_0-\textbf{w}^* \Vert^2 + \frac{\eta}{2\mu}C^2
+    \end{gather}
+\end{theorem}
+\begin{proof}
+    The first condition implies the function is smooth, so that $J(\textbf{w}_{k+1})$ can be written as
+    \begin{equation*}
+        J(\textbf{w}_{k+1}) \leq J(\textbf{w}_k) + \nabla J(\textbf{w}_k)^T (\textbf{w}_{k+1}-\textbf{w}_k) + \frac{L}{2} \Vert \textbf{w}_{k+1}-\textbf{w}_k \Vert^2
+    \end{equation*}
+    Now we substitute the update rule of the stochastic gradient descent
+    \begin{gather*}
+        J(\textbf{w}_{k+1}) \leq J(\textbf{w}_k) + \eta \nabla J(\textbf{w}_k)^T \nabla J_i(\textbf{w}_k) + \frac{L}{2} \eta^2 \Vert \nabla J_i(\textbf{w}_k) \Vert^2 \\
+        \leq J(\textbf{w}_k) - \eta \nabla J(\textbf{w}_k)^T \nabla J_i(\textbf{w}_k) + \frac{L\eta^2}{2}C^2 \\
+        \implies J(\textbf{w}_{k+1}) - J(\textbf{w}^*) \leq   J(\textbf{w}_k) - \eta \Vert \nabla J_i(\textbf{w}_k) \Vert^2 + \frac{L\eta^2}{2}C^2 - J(\textbf{w}^*)
+    \end{gather*}
+
+    Now we take the expected value of both sides, conditioned at the information at step $k$
+
+    \begin{gather*}
+        \mathbb{E}\big[ J(\textbf{w}_{k+1}) - J(\textbf{w}^*) \big] \leq J(\textbf{w}_k) - J(\textbf{w}^*) - \eta \mathbb{E}\big[\Vert \nabla J_i(\textbf{w}_k)\Vert^2\big]  + \frac{L\eta^2}{2}C^2 \leq \\
+        \leq J(\textbf{w}_k) - J(\textbf{w}^*) - \eta \Vert \nabla J(\textbf{w}_k) \Vert^2 + \frac{L\eta^2}{2}C^2
+    \end{gather*}
+    Using the $\mu-$strong convexity, one can show that $J(\textbf{w}^*) \geq J(\textbf{w}_k) - \frac{1}{2\mu} \Vert J(\textbf{w}_k) \Vert^2$, so we can invert the relation to get
+
+    \begin{gather*}
+        \mathbb{E}\big[ J(\textbf{w}_{k+1}) - J(\textbf{w}^*) \big] \leq J(\textbf{w}_k) - J(\textbf{w}^*) - 2\eta\mu \big( J(\textbf{w}_k) - J(\textbf{w}^*) \big) + \frac{L\eta^2}{2}C^2 \leq \\
+        \leq (1-2\eta \mu)\big( J(w_k) - J(w^*) \big) + \frac{L\eta^2}{2}C^2
+    \end{gather*}
+
+    We could iterate this whole process $k$ times, which we'll leave us with
+
+    \begin{gather*}
+        \mathbb{E}\big[ J(\textbf{w}_{k+1}) - J(\textbf{w}^*) \big] \leq (1-2\eta\mu)^{k+1} \big( J(\textbf{w}_0)-J(\textbf{w}^*) \big) + \sum_{i=0}^k (1-2\eta\mu)^i \frac{L\eta^2}{2}C^2 \leq \\
+        \leq (1-2\eta\mu)^{k+1} \big( J(\textbf{w}_0)-J(\textbf{w}^*) \big) +\frac{L\eta}{4\mu}C^2
+    \end{gather*}
+
+    Choosing as cost function the evaluation norm $J(\textbf{x}) = \Vert \textbf{x} \Vert^2$, the smoothness constant is $L = 2$ and hence 
+    \begin{equation*}
+        \mathbb{E}\big[ \Vert \textbf{w}_{k+1} - \textbf{w}^* \Vert^2 \big] \leq (1-2\eta \mu)^{k+1} \Vert \textbf{w}_0 - \textbf{w}^* \Vert^2 + \frac{\eta C^2}{2\mu}
+     \end{equation*}
+\end{proof}
+
+Modern optimization method have been built, adapting the learning rate at each step. An important concept to consider is \textit{Momentum}: if the algorithm is descending rapidly, it will likely keep on the same path, regardless on what the actual gradient is pointing. The most basic implementation of momentum methods is the following
+
+\begin{equation}
+    \begin{cases}
+        \textbf{v}_k = \gamma \textbf{v}_{k-1} + \eta \nabla J(\textbf{w}_{k-1}) \\
+        \textbf{w}_k = \textbf{w}_{k-1}+\textbf{v}_{k-1}
+    \end{cases}
+\end{equation}
+
+The direction of the updated weights follows the sum of the momentum component and the actual gradient. For high enough $\gamma$, this method should be able to escape local minima. A more refined version of this idea is the Nesterov Accelerated Gradient (NAG)
+
+\begin{equation}
+    \begin{cases}
+        \textbf{v}_k = \gamma \textbf{v}_{k-1} + \eta \nabla J(\textbf{w}_{k-1}-\gamma \textbf{v}_{k-1}) \\
+        \textbf{w}_k = \textbf{w}_{k-1} + \textbf{v}_k
+    \end{cases}
+\end{equation}
+
+The gradient is not valued in the previous point, but rather using a predictor-corrector scheme; the next value is predicted and then adjusted. So far, both methods have constant parameters $\gamma,\eta$. The class of \textit{Adaptive Gradient} methods (ADAGRAD) provides also some update rule for the learning rate and momentum coefficient. The most famous method is probably \textit{ADAM}
+
+\begin{gather}
+        \begin{cases}
+        \textbf{m}_k = \beta_1\textbf{m}_{k-1} + (1-\beta_1) \textbf{g}_k  \;\;\;\; \text{estimated mean}\\
+        \textbf{v}_k = \beta_2\textbf{v}_{k-1} + (1-\beta_2) \textbf{g}_k^2 \;\;\;\;\text{estimated variance}
+    \end{cases}\\
+    \hat{\textbf{m}}_k = \frac{\textbf{m}_k}{1-\beta_1^k} \;\;\;\; \hat{\textbf{v}}_k = \frac{\textbf{v}_k}{1-\beta_2^k} \notag \\
+    \textbf{w}_{k+1} = \textbf{w}_k - \frac{\eta}{\sqrt{\hat{\textbf{v}}_k+\epsilon}} \hat{\textbf{m}}_k
+\end{gather}
 
 \section{Newton’s Method}
 Consider a continuous, twice differentiable function $f : I \subseteq \mathbb{R} \to \mathbb{R}$ that attains a minimum at the point $x^*$. Our goal is to construct an iterative algorithm that converges to this minimum by exploiting information from the first and second derivatives of $f$. This procedure is known as \emph{Newton’s method} for function minimization.  
