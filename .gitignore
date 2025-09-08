@@ -9,6 +9,8 @@ __pycache__/
 
 # videos from Lab1
 Video_*
+Exams*
+.DS_Store
 
 # Distribution / packaging
 .Python
